@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "355346670209",
+    "project_id": "freedome-chat",
+    "storage_bucket": "freedome-chat.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355346670209:android:36c6c649e7bfe0962e6380",
+        "android_client_info": {
+          "package_name": "com.example.freedomchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "355346670209-39fva0ldq77i2mtmdkt2m2qlhd89j4ui.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDS7cJCa6bcCNVCiACXfjGE-pjSvbEFhs8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "355346670209-39fva0ldq77i2mtmdkt2m2qlhd89j4ui.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
