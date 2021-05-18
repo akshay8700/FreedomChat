@@ -93,6 +93,8 @@ public class SettingActivity extends AppCompatActivity {
                 obj.put("about", about);
 
                 database.getReference().child("Users").child(auth.getUid()).updateChildren(obj);
+                //Backup
+                database.getReference().child("UsersBackup").child(auth.getUid()).updateChildren(obj);
                 Toast.makeText(SettingActivity.this, "Profile updated!", Toast.LENGTH_SHORT).show();
             }
         });
@@ -117,6 +119,8 @@ public class SettingActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Uri uri) {
                             database.getReference().child("Users").child(auth.getUid()).child("profilePic").setValue(uri.toString());
+                            //Backup
+                            database.getReference().child("UsersBackup").child(auth.getUid()).child("profilePic").setValue(uri.toString());
                             Toast.makeText(SettingActivity.this, "Profile updated!", Toast.LENGTH_SHORT).show();
                         }
                     });

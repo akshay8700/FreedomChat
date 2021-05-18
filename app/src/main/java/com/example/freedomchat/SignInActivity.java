@@ -20,6 +20,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -165,6 +166,9 @@ public class SignInActivity extends AppCompatActivity {
                             //Getting profile data from google than setting into user profile while sign in
                             database.getReference().child("Users").child(user.getUid()).setValue(myusers);
 
+                            //Checking backup
+                            setUserProfile(user);
+
                             Intent intent = new Intent(SignInActivity.this, MainActivity.class);
                             startActivity(intent);
                             Toast.makeText(SignInActivity.this, "Signed in with google", Toast.LENGTH_SHORT).show();
@@ -176,6 +180,72 @@ public class SignInActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    //Backup check
+    public void setUserProfile(FirebaseUser user){
+        final Users[] backupData = {new Users()};
+
+        //Get backup data
+        database.getReference().child("UsersBackup").child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Users backup = snapshot.getValue(Users.class);
+                backupData[0] = backup;
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        //Set backup data into Users profile in firebase if backup exist
+        database.getReference().child("UsersBackup").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                //if backup exist
+                if((snapshot.child(user.getUid()).exists())){
+                    Users backup = backupData[0];
+                    //Users backup = snapshot.getValue(Users.class);
+                    database.getReference().child("Users").child(user.getUid()).setValue(backup).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            updateBackup(user);
+                        }
+                    });
+
+                    Toast.makeText(SignInActivity.this, "Exist", Toast.LENGTH_LONG).show();
+                }
+                else{
+                    updateBackup(user);
+                    Toast.makeText(SignInActivity.this, "Not exist", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+
+    }
+
+    //Update backup data
+    public void updateBackup(FirebaseUser user){
+        database.getReference().child("Users").child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Users update = snapshot.getValue(Users.class);
+                database.getReference().child("UsersBackup").child(user.getUid()).setValue(update);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
 }
