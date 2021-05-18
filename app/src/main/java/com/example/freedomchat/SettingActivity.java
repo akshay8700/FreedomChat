@@ -52,6 +52,7 @@ public class SettingActivity extends AppCompatActivity {
             }
         });
 
+        //When click on plus button or we can say add button
         //Update profile button or Add pic
         binding.addButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,7 +98,7 @@ public class SettingActivity extends AppCompatActivity {
         });
     }
 
-    //When we get image from gallery, Here now set image in profile and send to storage and many more
+    //When we get image from gallery, Here now set image in profile and send to Firebase storage and many more
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

@@ -26,7 +26,11 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
 
 public class SignInActivity extends AppCompatActivity {
     ActivitySignInBinding binding;
@@ -115,12 +119,15 @@ public class SignInActivity extends AppCompatActivity {
         }
     }
 
+    //Part of google  sign in
     int RC_SIGN_IN = 69;
     private void signIn() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
+    //Part of google
+    //After we choosed account while sign in
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -154,6 +161,8 @@ public class SignInActivity extends AppCompatActivity {
                             myusers.setUserId(user.getUid());
                             myusers.setUserName(user.getDisplayName());
                             myusers.setProfilePic(user.getPhotoUrl().toString());
+
+                            //Getting profile data from google than setting into user profile while sign in
                             database.getReference().child("Users").child(user.getUid()).setValue(myusers);
 
                             Intent intent = new Intent(SignInActivity.this, MainActivity.class);
