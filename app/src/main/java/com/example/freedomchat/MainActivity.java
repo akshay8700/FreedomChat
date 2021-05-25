@@ -2,9 +2,15 @@ package com.example.freedomchat;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.FragmentManager;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -30,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         auth = FirebaseAuth.getInstance();
+        notiTest();
 
         //ViewPager setup\TapLayout setup
         binding.viewPager.setAdapter(new FragmentsAdapter(getSupportFragmentManager()));
@@ -74,5 +81,23 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return true;
+    }
+
+    //Notification test
+    public void notiTest(){
+//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+//
+//        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "Music")
+                .setContentTitle("MyNotification")
+                .setAutoCancel(true)
+                .setSmallIcon(R.drawable.square_account_icon)
+                .setContentText("Hello this is a test");
+
+        NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
+        managerCompat.notify(69, builder.build());
+
+        Toast.makeText(this, "Notification called", Toast.LENGTH_SHORT).show();
     }
 }
