@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -23,12 +24,25 @@ import com.example.freedomchat.databinding.ActivityMainBinding;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+
+import java.util.HashMap;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
+
     private FirebaseAuth auth;
+    FirebaseDatabase database;
+
     GoogleSignInClient mGoogleSignInClient;
+
+    public static String userToken = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +52,29 @@ public class MainActivity extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
 
-        //ViewPager setup\TapLayout setup
+        // Send this token in firebase user details than get friend token from friend auth id from firebase
+        // Getting userToken
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (task.isSuccessful()) {
+                            userToken = Objects.requireNonNull(task.getResult()).getToken();
+
+                            // Show userToken in logcat
+                            Log.i("userToken", "User token: " + userToken);
+                        }
+                    }
+                });
+
+        // Storing token into user firebase. Users/userID/userToken
+        HashMap<String ,Object> map = new HashMap<>();
+        map.put("userToken", userToken);
+
+        database.getReference().child("Users").child((auth.getUid())).updateChildren(map);
+
+        //ViewPager setup TapLayout setup
         binding.viewPager.setAdapter(new FragmentsAdapter(getSupportFragmentManager()));
         binding.tabLayout.setupWithViewPager(binding.viewPager);
 
@@ -81,40 +117,5 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return true;
-    }
-
-    //Notification test
-    public void notiTest(){
-        // (Personal Experiment not official knowledge)
-        // Here checking if android os is oreo or more than oreo
-        // Create channel and Manager if OS is >=Oreo
-        // Channel is a type of our notification group we can set a Importance at that specific group of notification or maybe more
-        // Manager Is just manage and create the notification channel, Note:- Don`t forget that every notification channel creates only one time
-        // This code runs one time until application uninstall aur Data cleared
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            NotificationChannel channel = new NotificationChannel("Music", "MusicNotification", NotificationManager.IMPORTANCE_DEFAULT);
-
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(channel);
-        }
-
-        // Creating notification objects for every new notification create new object lol
-        NotificationCompat.Builder musicNotification = new NotificationCompat.Builder(this, "Music")
-                .setContentTitle("Music Notification")
-                .setAutoCancel(true)
-                .setSmallIcon(R.drawable.square_account_icon)
-                .setContentText("Hello this is a second noti");
-
-        // According to my experiment in 5/25/2021 I noticed that at upper manager that getting from our system is actually just creating notification channel
-        // But this manager is actually checking that this notification is exist in our channel or not if not that will ignore and will not call
-        // If yess it will call and notify and build that notification object with unique id and yaa he ignored is object same or not he just focus on id if id
-        // -is same he will show only 1 notification even if object is same but if id is unique he don`t care it is same or not he will show that multiple times if we call multiple same objects with unique id
-        NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
-
-        //showing notification with unique id
-        managerCompat.notify(8329, musicNotification.build());
-        managerCompat.notify(839, musicNotification.build());
-
-        Toast.makeText(this, "Notification called", Toast.LENGTH_SHORT).show();
     }
 }

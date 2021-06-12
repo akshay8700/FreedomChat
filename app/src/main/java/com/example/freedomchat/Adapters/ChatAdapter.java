@@ -66,7 +66,10 @@ public class ChatAdapter extends RecyclerView.Adapter{
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         MessageModel messageModel = list.get(position);
 
-        //Delete message on long click
+        // Send notification to friends
+
+
+        // Delete message on long click
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -105,7 +108,8 @@ public class ChatAdapter extends RecyclerView.Adapter{
         return list.size();
     }
 
-    public class recieverViewHolder extends RecyclerView.ViewHolder{
+    public class recieverViewHolder extends RecyclerView.ViewHolder
+    {
 
         public TextView recieverText;
         public TextView recieverTime;
@@ -117,7 +121,8 @@ public class ChatAdapter extends RecyclerView.Adapter{
             recieverTime = itemView.findViewById(R.id.recieverTime);
         }
     }
-    public class senderViewHolder extends RecyclerView.ViewHolder{
+
+    public class senderViewHolder extends RecyclerView.ViewHolder {
 
         public TextView senderText;
         public TextView senderTime;

@@ -5,30 +5,42 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.example.freedomchat.Adapters.ChatAdapter;
 import com.example.freedomchat.Models.MessageModel;
+import com.example.freedomchat.Models.Users;
 import com.example.freedomchat.databinding.ActivityChatDetailBinding;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 public class ChatDetailActivity extends AppCompatActivity {
 
     ActivityChatDetailBinding binding;
     FirebaseDatabase database;
     FirebaseAuth auth;
+
+    String userToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +51,9 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         database = FirebaseDatabase.getInstance();
         auth = FirebaseAuth.getInstance();
+
+        // getting user token
+        userToken = MainActivity.userToken;
 
         //Getting userId userName and UserPic data from UsersAdapter with the help of intent
         //When user clicked on any chat from chatting list the rv will send data of that specific user into chatdetail activity
@@ -95,7 +110,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                     }
                 });
 
-        //When user click on send we will send that message into firebase database
+        // When user click on send we will send that message into firebase database
         binding.send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -121,7 +136,32 @@ public class ChatDetailActivity extends AppCompatActivity {
                         });
                     }
                 });
+
+                // Send notification
+                // Getting and setting all notification related data like title message token
+                String notTitle = userName;
+                String token = userToken;
+                Context context = getApplicationContext();
+                Activity mActivity = ChatDetailActivity.this;
+
+                sendNotification(notTitle, message, token, context, mActivity);
             }
         });
+
+        Log.i("NotiDetails", "UserName: " + userName);
+    }
+
+    // When sender click on send button receiver will receive notification with this method
+    public static void sendNotification(String title, String message, String token, Context context, Activity mActivity) {
+        if (title != null && !title.isEmpty() && !message.isEmpty() && !token.isEmpty()) {
+            FcmNotificationsSender notificationsSender = new FcmNotificationsSender(token , title, message, context, mActivity);
+
+            notificationsSender.SendNotifications();
+
+            Toast.makeText(context, "Send to one is pressed!", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(context, "Please fill title content and token", Toast.LENGTH_SHORT).show();
+        }
     }
 }
