@@ -9,6 +9,7 @@ public class Users {
     String userId;
     String lastMessage;
     String about;
+    String userToken;
 
     public String getUserId() {
         return userId;
@@ -18,9 +19,17 @@ public class Users {
         this.userId = userId;
     }
 
+    public String getUserToken() {
+        return userToken;
+    }
+
+    public void setUserToken(String userToken) {
+        this.userToken = userToken;
+    }
+
     public Users(){}
 
-    public Users(String profilePic, String userName, String mail, String password, String userId, String lastMessage, String about) {
+    public Users(String profilePic, String userName, String mail, String password, String userId, String lastMessage, String about, String userToken) {
         this.profilePic = profilePic;
         this.userName = userName;
         this.mail = mail;
@@ -28,6 +37,7 @@ public class Users {
         this.userId = userId;
         this.lastMessage = lastMessage;
         this.about = about;
+        this.userToken = userToken;
     }
 
     //SignUp Constructor

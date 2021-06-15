@@ -25,6 +25,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+
+import java.util.Objects;
 
 public class SignUpActivity extends AppCompatActivity {
     ActivitySignUpBinding binding;
@@ -32,6 +36,8 @@ public class SignUpActivity extends AppCompatActivity {
     private FirebaseDatabase database;
     private ProgressDialog progressDialog;
     GoogleSignInClient mGoogleSignInClient;
+
+    public static String userToken = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,10 +161,41 @@ public class SignUpActivity extends AppCompatActivity {
                             startActivity(intent);
                             Toast.makeText(SignUpActivity.this, "Signed in with google", Toast.LENGTH_SHORT).show();
                             //updateUI(user);
+
+                            setToken();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w("TAG", "signInWithCredential:failure", task.getException());
                             //updateUI(null);
+                        }
+                    }
+                });
+        setToken();
+    }
+
+    public void setToken() {
+        // Send this token in firebase user details than get friend token from friend auth id from firebase
+        // Getting userToken
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (task.isSuccessful()) {
+                            userToken = Objects.requireNonNull(task.getResult()).getToken();
+
+                            // Show userToken in logcat
+                            Log.i("userToken", "User token: " + userToken);
+
+                            if(auth.getUid() != null) {
+                                database.getReference().child("Users").child(auth.getUid()).child("userToken").setValue(userToken);
+
+                                Log.i("userToken", "userToken saved! " + userToken);
+                            }
+                            else {
+                                Log.i("userToken", "authentication is null means user does not login");
+                            }
+
                         }
                     }
                 });

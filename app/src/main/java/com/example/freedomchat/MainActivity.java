@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.example.freedomchat.Adapters.FragmentsAdapter;
+import com.example.freedomchat.Models.Users;
 import com.example.freedomchat.databinding.ActivityMainBinding;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -37,12 +38,10 @@ import java.util.Objects;
 public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
 
-    private FirebaseAuth auth;
+    public FirebaseAuth auth;
     FirebaseDatabase database;
 
     GoogleSignInClient mGoogleSignInClient;
-
-    public static String userToken = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,28 +50,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         auth = FirebaseAuth.getInstance();
-
-        // Send this token in firebase user details than get friend token from friend auth id from firebase
-        // Getting userToken
-        FirebaseInstanceId.getInstance().getInstanceId()
-                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
-
-                    @Override
-                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
-                        if (task.isSuccessful()) {
-                            userToken = Objects.requireNonNull(task.getResult()).getToken();
-
-                            // Show userToken in logcat
-                            Log.i("userToken", "User token: " + userToken);
-                        }
-                    }
-                });
-
-        // Storing token into user firebase. Users/userID/userToken
-        HashMap<String ,Object> map = new HashMap<>();
-        map.put("userToken", userToken);
-
-        database.getReference().child("Users").child((auth.getUid())).updateChildren(map);
 
         //ViewPager setup TapLayout setup
         binding.viewPager.setAdapter(new FragmentsAdapter(getSupportFragmentManager()));

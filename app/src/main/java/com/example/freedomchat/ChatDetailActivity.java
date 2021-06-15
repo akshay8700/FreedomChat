@@ -30,6 +30,8 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.squareup.picasso.Picasso;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
@@ -40,7 +42,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     FirebaseDatabase database;
     FirebaseAuth auth;
 
-    String userToken;
+    String recieverToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,15 +54,28 @@ public class ChatDetailActivity extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
         auth = FirebaseAuth.getInstance();
 
-        // getting user token
-        userToken = MainActivity.userToken;
-
         //Getting userId userName and UserPic data from UsersAdapter with the help of intent
         //When user clicked on any chat from chatting list the rv will send data of that specific user into chatdetail activity
         final String senderID = auth.getUid();
-        String recieverID = getIntent().getStringExtra("userID");
+        String receiverID = getIntent().getStringExtra("userID");
         String userName = getIntent().getStringExtra("userName");
         String userPic = getIntent().getStringExtra("UserPic");
+
+        // getting receiver token for notification
+        database.getReference().child("Users").child(receiverID).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                Users users = snapshot.getValue(Users.class);
+                recieverToken = users.getUserToken();
+
+                Log.i("userToken", "receiverToken: " + recieverToken);
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
 
         //Now setting that data in profile and name section and others
         binding.userName.setText(userName);
@@ -77,7 +92,7 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         //Setting up for RV Defining list and adapter
         final ArrayList<MessageModel> messageModels = new ArrayList<>();
-        final ChatAdapter chatAdapter = new ChatAdapter(messageModels, this, recieverID);
+        final ChatAdapter chatAdapter = new ChatAdapter(messageModels, this, receiverID);
         binding.rvChat.setAdapter(chatAdapter);
 
         //Setting up for RV setting layout in RV
@@ -85,8 +100,8 @@ public class ChatDetailActivity extends AppCompatActivity {
         binding.rvChat.setLayoutManager(layoutManager);
 
         //Variable for giving unique id in Firebase for sender and reciever messages group
-        final String senderRoom = senderID + recieverID;
-        final String recieverRoom = recieverID + senderID;
+        final String senderRoom = senderID + receiverID;
+        final String recieverRoom = receiverID + senderID;
 
         //After user sended a message this code will show that message in chatting display means in recyclerView with chat bubble
         //Basically we are getting chat data from firebase to chatdetailactivity
@@ -139,8 +154,10 @@ public class ChatDetailActivity extends AppCompatActivity {
 
                 // Send notification
                 // Getting and setting all notification related data like title message token
+
+
                 String notTitle = userName;
-                String token = userToken;
+                String token = recieverToken;
                 Context context = getApplicationContext();
                 Activity mActivity = ChatDetailActivity.this;
 

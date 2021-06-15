@@ -31,7 +31,12 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.squareup.picasso.Picasso;
+
+import java.util.HashMap;
+import java.util.Objects;
 
 public class SignInActivity extends AppCompatActivity {
     ActivitySignInBinding binding;
@@ -39,6 +44,8 @@ public class SignInActivity extends AppCompatActivity {
     private ProgressDialog progressDialog;
     GoogleSignInClient mGoogleSignInClient;
     FirebaseDatabase database;
+
+    public static String userToken = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +125,9 @@ public class SignInActivity extends AppCompatActivity {
             Intent intent = new Intent(SignInActivity.this, MainActivity.class);
             startActivity(intent);
         }
+
+        // set token for notifications send
+        setToken();
     }
 
     //Part of google  sign in
@@ -173,6 +183,8 @@ public class SignInActivity extends AppCompatActivity {
                             startActivity(intent);
                             Toast.makeText(SignInActivity.this, "Signed in with google", Toast.LENGTH_SHORT).show();
                             //updateUI(user);
+
+                            setToken();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w("TAG", "signInWithCredential:failure", task.getException());
@@ -248,4 +260,31 @@ public class SignInActivity extends AppCompatActivity {
         });
     }
 
+    public void setToken() {
+        // Send this token in firebase user details than get friend token from friend auth id from firebase
+        // Getting userToken
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (task.isSuccessful()) {
+                            userToken = Objects.requireNonNull(task.getResult()).getToken();
+
+                            // Show userToken in logcat
+                            Log.i("userToken", "User token: " + userToken);
+
+                            if(auth.getUid() != null) {
+                                database.getReference().child("Users").child(auth.getUid()).child("userToken").setValue(userToken);
+
+                                Log.i("userToken", "userToken saved! " + userToken);
+                            }
+                            else {
+                                Log.i("userToken", "authentication is null means user does not login");
+                            }
+
+                        }
+                    }
+                });
+    }
 }
