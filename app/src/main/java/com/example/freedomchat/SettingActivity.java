@@ -100,7 +100,7 @@ public class SettingActivity extends AppCompatActivity {
         });
     }
 
-    //When we get image from gallery, Here now set image in profile and send to Firebase storage and many more
+    // When we get image from gallery, Here now set image in profile and send to Firebase storage and many more
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -127,5 +127,13 @@ public class SettingActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    // While loggin out delete token
+    public void deleteToken() {
+        HashMap<String, Object> obj = new HashMap<>();
+        obj.put("userToken", "");
+
+        database.getReference().child("Users").child(auth.getUid()).updateChildren(obj);
     }
 }

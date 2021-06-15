@@ -38,7 +38,8 @@ import com.squareup.picasso.Picasso;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class SignInActivity extends AppCompatActivity {
+public class
+SignInActivity extends AppCompatActivity {
     ActivitySignInBinding binding;
     private FirebaseAuth auth;
     private ProgressDialog progressDialog;
@@ -274,6 +275,7 @@ public class SignInActivity extends AppCompatActivity {
                             // Show userToken in logcat
                             Log.i("userToken", "User token: " + userToken);
 
+                            // Saving token into database
                             if(auth.getUid() != null) {
                                 database.getReference().child("Users").child(auth.getUid()).child("userToken").setValue(userToken);
 

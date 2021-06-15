@@ -26,8 +26,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
@@ -82,10 +84,18 @@ public class MainActivity extends AppCompatActivity {
                 break;
 
             case R.id.itemLogout:
-                auth.signOut();
-                mGoogleSignInClient.signOut();
-                Intent intent = new Intent(MainActivity.this, SignInActivity.class);
-                startActivity(intent);
+
+                // When logout delete token from database
+                DatabaseReference db = FirebaseDatabase.getInstance().getReference().child("Users").child(auth.getUid());
+                db.child("userToken").setValue("").addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        auth.signOut();
+                        mGoogleSignInClient.signOut();
+                        Intent intent = new Intent(MainActivity.this, SignInActivity.class);
+                        startActivity(intent);
+                    }
+                });
                 break;
 
             case R.id.groupChatItem:

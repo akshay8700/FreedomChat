@@ -43,6 +43,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     FirebaseAuth auth;
 
     String recieverToken;
+    String myName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +70,20 @@ public class ChatDetailActivity extends AppCompatActivity {
                 recieverToken = users.getUserToken();
 
                 Log.i("userToken", "receiverToken: " + recieverToken);
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
+
+        // getting users name not friend name
+        database.getReference().child("Users").child(auth.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                Users users = snapshot.getValue(Users.class);
+                myName = users.getUserName();
             }
 
             @Override
@@ -156,7 +171,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                 // Getting and setting all notification related data like title message token
 
 
-                String notTitle = userName;
+                String notTitle = myName;
                 String token = recieverToken;
                 Context context = getApplicationContext();
                 Activity mActivity = ChatDetailActivity.this;
