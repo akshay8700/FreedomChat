@@ -169,8 +169,6 @@ public class ChatDetailActivity extends AppCompatActivity {
 
                 // Send notification
                 // Getting and setting all notification related data like title message token
-
-
                 String notTitle = myName;
                 String token = recieverToken;
                 Context context = getApplicationContext();
@@ -189,8 +187,6 @@ public class ChatDetailActivity extends AppCompatActivity {
             FcmNotificationsSender notificationsSender = new FcmNotificationsSender(token , title, message, context, mActivity);
 
             notificationsSender.SendNotifications();
-
-            Toast.makeText(context, "Send to one is pressed!", Toast.LENGTH_SHORT).show();
         }
         else {
             Toast.makeText(context, "Please fill title content and token", Toast.LENGTH_SHORT).show();

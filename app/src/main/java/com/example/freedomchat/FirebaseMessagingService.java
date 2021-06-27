@@ -18,23 +18,34 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.RemoteMessage;
+
+import org.jetbrains.annotations.NotNull;
 
 public class FirebaseMessagingService extends com.google.firebase.messaging.FirebaseMessagingService {
 
      NotificationManager mNotificationManager;
 
+     FirebaseAuth auth;
+
+    String name;
+    String id;
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
+        auth = FirebaseAuth.getInstance();
 
-// playing audio and vibration when user se reques
+// playing audio and vibration when user se request
         Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
         r.play();
@@ -42,15 +53,13 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
             r.setLooping(false);
         }
 
+
         // vibration
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         long[] pattern = {100, 300, 300, 300};
         v.vibrate(pattern, -1);
 
-
         int resourceImage = getResources().getIdentifier(remoteMessage.getNotification().getIcon(), "drawable", getPackageName());
-
-
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "CHANNEL_ID");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -67,7 +76,7 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 
-        builder.setContentTitle(remoteMessage.getNotification().getTitle());
+        builder.setContentTitle(name);
         builder.setContentText(remoteMessage.getNotification().getBody());
         builder.setContentIntent(pendingIntent);
         builder.setStyle(new NotificationCompat.BigTextStyle().bigText(remoteMessage.getNotification().getBody()));
@@ -92,10 +101,9 @@ public class FirebaseMessagingService extends com.google.firebase.messaging.Fire
         }
 
 
-
-// notificationId is a unique int for each notification that you must define
-        mNotificationManager.notify(100, builder.build());
+            mNotificationManager.notify(100, builder.build());
     }
+
 
 }
 

@@ -2,16 +2,21 @@ package com.example.freedomchat.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.Image;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.freedomchat.BigPhoto;
 import com.example.freedomchat.ChatDetailActivity;
+import com.example.freedomchat.Fragments.ChatsFragment;
+import com.example.freedomchat.MainActivity;
 import com.example.freedomchat.Models.Users;
 import com.example.freedomchat.R;
 import com.google.firebase.auth.FirebaseAuth;
@@ -66,6 +71,7 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> 
                     }
                 });
 
+        // if click on user at home screen go into user chat for chatting with him
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -77,7 +83,21 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> 
                 context.startActivity(intent);
             }
         });
-    }
+
+        // Hold on profile pic for viewing profile
+        holder.userPic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intentBigPhoto = new Intent(context, BigPhoto.class);
+
+                // Send user id to BigPhoto activity for viewing photo from userID throw firebase
+                intentBigPhoto.putExtra("ReceiverID", users.getUserId());
+                context.startActivity(intentBigPhoto);
+
+            } // End of onclick
+        }); // holder.userPic.setOnClickListener
+
+    } // End of onBindViewHolder
 
     @Override
     public int getItemCount() {

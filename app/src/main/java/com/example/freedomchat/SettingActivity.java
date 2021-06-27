@@ -129,11 +129,4 @@ public class SettingActivity extends AppCompatActivity {
         }
     }
 
-    // While loggin out delete token
-    public void deleteToken() {
-        HashMap<String, Object> obj = new HashMap<>();
-        obj.put("userToken", "");
-
-        database.getReference().child("Users").child(auth.getUid()).updateChildren(obj);
-    }
 }

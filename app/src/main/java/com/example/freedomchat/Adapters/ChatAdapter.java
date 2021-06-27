@@ -19,7 +19,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 
-public class ChatAdapter extends RecyclerView.Adapter{
+public class ChatAdapter extends RecyclerView.Adapter {
 
     public ArrayList<MessageModel> list;
     public Context context;
@@ -65,8 +65,6 @@ public class ChatAdapter extends RecyclerView.Adapter{
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         MessageModel messageModel = list.get(position);
-
-        // Send notification to friends
 
 
         // Delete message on long click

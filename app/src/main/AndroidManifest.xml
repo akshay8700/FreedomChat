@@ -12,7 +12,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FreedomChat">
-        <activity android:name=".SettingActivity"></activity>
+        <activity android:name=".BigPhoto"></activity>
+        <activity android:name=".SettingActivity" />
         <activity android:name=".GroupChatActivity" />
         <activity android:name=".ChatDetailActivity" />
         <activity android:name=".SignInActivity">

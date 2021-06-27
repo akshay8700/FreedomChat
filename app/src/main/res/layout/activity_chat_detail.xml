@@ -6,7 +6,9 @@
     android:layout_height="match_parent"
     android:background="#CCCCCC"
     android:orientation="vertical"
-    tools:context=".ChatDetailActivity">
+    tools:context=".ChatDetailActivity"
+    app:stackFromEnd="false"
+    app:reverseLayout="true">
 
 
     <androidx.appcompat.widget.Toolbar

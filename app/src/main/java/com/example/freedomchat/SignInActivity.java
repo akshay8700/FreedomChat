@@ -40,6 +40,7 @@ import java.util.Objects;
 
 public class
 SignInActivity extends AppCompatActivity {
+
     ActivitySignInBinding binding;
     private FirebaseAuth auth;
     private ProgressDialog progressDialog;
