@@ -112,6 +112,7 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         //Setting up for RV setting layout in RV
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setStackFromEnd(true); // Show from dowm when open messages
         binding.rvChat.setLayoutManager(layoutManager);
 
         //Variable for giving unique id in Firebase for sender and reciever messages group
@@ -191,5 +192,17 @@ public class ChatDetailActivity extends AppCompatActivity {
         else {
             Toast.makeText(context, "Please fill title content and token", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // Show user about
+    public void onUserNameClick(String receiverID) {
+        binding.userName.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(ChatDetailActivity.this, Friend_About.class);
+                intent.putExtra("FriendID", receiverID);
+                startActivity(intent);
+            }
+        });
     }
 }

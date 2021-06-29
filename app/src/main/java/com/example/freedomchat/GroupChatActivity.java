@@ -52,6 +52,7 @@ public class GroupChatActivity extends AppCompatActivity {
 
         //Setting up for RV setting layout in RV
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setStackFromEnd(true); // Show from dowm when open messages
         binding.rvChat.setLayoutManager(layoutManager);
 
         //When user click on send we will send that message into firebase database

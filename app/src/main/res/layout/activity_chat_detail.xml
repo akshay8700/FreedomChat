@@ -6,9 +6,7 @@
     android:layout_height="match_parent"
     android:background="#CCCCCC"
     android:orientation="vertical"
-    tools:context=".ChatDetailActivity"
-    app:stackFromEnd="false"
-    app:reverseLayout="true">
+    tools:context=".ChatDetailActivity">
 
 
     <androidx.appcompat.widget.Toolbar
@@ -91,13 +89,18 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.Toolbar>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvChat"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/toolbar"
-        android:layout_above="@+id/sendLayout">
-    </androidx.recyclerview.widget.RecyclerView>
+        android:layout_above="@id/sendLayout"
+        android:layout_below="@id/toolbar"
+        android:orientation="vertical">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvChat"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"></androidx.recyclerview.widget.RecyclerView>
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/sendLayout"
@@ -123,6 +126,7 @@
             android:id="@+id/send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="top"
             android:layout_marginLeft="10dp"
             android:layout_weight="0"
             android:background="@drawable/circle_backround"
