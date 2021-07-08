@@ -180,6 +180,8 @@ public class ChatDetailActivity extends AppCompatActivity {
         });
 
         Log.i("NotiDetails", "UserName: " + userName);
+
+        onUserNameClick(receiverID);
     }
 
     // When sender click on send button receiver will receive notification with this method
