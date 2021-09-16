@@ -1,6 +1,7 @@
 package com.example.freedomchat;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -8,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -28,11 +30,16 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Objects;
 
@@ -41,9 +48,14 @@ public class ChatDetailActivity extends AppCompatActivity {
     ActivityChatDetailBinding binding;
     FirebaseDatabase database;
     FirebaseAuth auth;
+    FirebaseStorage storage;
 
     String recieverToken;
     String myName;
+    String senderID;
+
+    String senderRoom;
+    String recieverRoom;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,14 +65,15 @@ public class ChatDetailActivity extends AppCompatActivity {
         getSupportActionBar().hide();
 
         database = FirebaseDatabase.getInstance();
-        auth = FirebaseAuth.getInstance();
+        auth     = FirebaseAuth.getInstance();
+        storage  = FirebaseStorage.getInstance();
 
         //Getting userId userName and UserPic data from UsersAdapter with the help of intent
         //When user clicked on any chat from chatting list the rv will send data of that specific user into chatdetail activity
-        final String senderID = auth.getUid();
-        String receiverID = getIntent().getStringExtra("userID");
-        String userName = getIntent().getStringExtra("userName");
-        String userPic = getIntent().getStringExtra("UserPic");
+        senderID              = auth.getUid();
+        String receiverID     = getIntent().getStringExtra("userID");
+        String userName       = getIntent().getStringExtra("userName");
+        String userPic        = getIntent().getStringExtra("UserPic");
 
         // getting receiver token for notification
         database.getReference().child("Users").child(receiverID).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -116,8 +129,8 @@ public class ChatDetailActivity extends AppCompatActivity {
         binding.rvChat.setLayoutManager(layoutManager);
 
         //Variable for giving unique id in Firebase for sender and reciever messages group
-        final String senderRoom = senderID + receiverID;
-        final String recieverRoom = receiverID + senderID;
+         senderRoom = senderID + receiverID;
+         recieverRoom = receiverID + senderID;
 
         //After user sended a message this code will show that message in chatting display means in recyclerView with chat bubble
         //Basically we are getting chat data from firebase to chatdetailactivity
@@ -182,6 +195,17 @@ public class ChatDetailActivity extends AppCompatActivity {
         Log.i("NotiDetails", "UserName: " + userName);
 
         onUserNameClick(receiverID);
+
+        // Attachment Button
+        binding.attachment.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/*");
+                startActivityForResult(intent, 38);
+            }
+        });
     }
 
     // When sender click on send button receiver will receive notification with this method
@@ -206,5 +230,75 @@ public class ChatDetailActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+    // Getting selected photo
+    // Ex: sending photo to friend from gallery
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == 38) {
+            if(data != null) {
+                if(data.getData() != null) {
+                    Uri selectedPhotoURI = data.getData();
+
+                    Calendar calendar = Calendar.getInstance();
+                    StorageReference storageReference = storage.getReference()
+                            .child("chats").child("AZ_" + calendar.getTimeInMillis());
+
+                    storageReference.putFile(selectedPhotoURI).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull @NotNull Task<UploadTask.TaskSnapshot> task) {
+                            if(task.isSuccessful()) {
+                                storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                    @Override
+                                    public void onSuccess(Uri uri) {
+                                        String imagePath = uri.toString();
+
+                                        String message = binding.etSendMessage.getText().toString();
+                                        final MessageModel model = new MessageModel(senderID, message);
+                                        model.setTimestamp(new Date().getTime());
+                                        model.setImageUrl(imagePath);
+                                        model.setMessage("Photo");
+                                        binding.etSendMessage.setText("");
+
+                                        database.getReference().child("chats")
+                                                .child(senderRoom)
+                                                .push()
+                                                .setValue(model).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                database.getReference().child("chats")
+                                                        .child(recieverRoom)
+                                                        .push()
+                                                        .setValue(model).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void aVoid) {
+
+                                                    }
+                                                });
+                                            }
+                                        });
+
+                                        // Send notification
+                                        // Getting and setting all notification related data like title message token
+                                        String notTitle = myName;
+                                        String token = recieverToken;
+                                        Context context = getApplicationContext();
+                                        Activity mActivity = ChatDetailActivity.this;
+
+                                        sendNotification(notTitle, message, token, context, mActivity);
+
+                                        Toast.makeText(ChatDetailActivity.this, imagePath, Toast.LENGTH_LONG).show();
+                                    }
+                                });
+
+                            }
+                        }
+                    });
+                }
+            }
+        }
     }
 }

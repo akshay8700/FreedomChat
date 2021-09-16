@@ -3,9 +3,12 @@ package com.example.freedomchat.Adapters;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.opengl.Visibility;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,8 +19,12 @@ import com.example.freedomchat.Models.MessageModel;
 import com.example.freedomchat.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
+import com.squareup.picasso.Picasso;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.TimeZone;
 
 public class ChatAdapter extends RecyclerView.Adapter {
 
@@ -66,7 +73,6 @@ public class ChatAdapter extends RecyclerView.Adapter {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         MessageModel messageModel = list.get(position);
 
-
         // Delete message on long click
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -93,11 +99,33 @@ public class ChatAdapter extends RecyclerView.Adapter {
             }
         });
 
-        if(holder.getClass() == senderViewHolder.class){
+        if(holder.getClass() == senderViewHolder.class) {
             ((senderViewHolder)holder).senderText.setText(messageModel.getMessage());
+            ((senderViewHolder) holder).senderTime.setText("demo");
+
+            DateFormat formatter = new SimpleDateFormat("hh:mm aa");
+            formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+            String dateFormatted = formatter.format(messageModel.getTimestamp());
+
+            Log.i("Akku", "Time: " + dateFormatted);
+
+            // if its a photo from sender, Show photo to
+            // friend and Me in simple words with this code i m sending photos
+            if(messageModel.getMessage().equals("Photo")) {
+                ((senderViewHolder) holder).photo.setVisibility(View.VISIBLE);
+                ((senderViewHolder) holder).senderText.setVisibility(View.INVISIBLE);
+                Picasso.get().load(messageModel.getImageUrl()).placeholder(R.drawable.ic_twotone_access_time_24).into(((senderViewHolder) holder).photo);
+            }
         }
         else{
             ((recieverViewHolder)holder).recieverText.setText(messageModel.getMessage());
+            ((recieverViewHolder) holder).recieverTime.setText("Donut");
+
+            if(messageModel.getMessage().equals("Photo")) {
+                ((recieverViewHolder) holder).receiverPhoto.setVisibility(View.VISIBLE);
+                ((recieverViewHolder) holder).recieverText.setVisibility(View.INVISIBLE);
+                Picasso.get().load(messageModel.getImageUrl()).placeholder(R.drawable.ic_twotone_access_time_24).into(((recieverViewHolder) holder).receiverPhoto);
+            }
         }
     }
 
@@ -111,12 +139,14 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
         public TextView recieverText;
         public TextView recieverTime;
+        public ImageView receiverPhoto;
 
         public recieverViewHolder(@NonNull View itemView) {
             super(itemView);
 
             recieverText = itemView.findViewById(R.id.recieverText);
             recieverTime = itemView.findViewById(R.id.recieverTime);
+            receiverPhoto = itemView.findViewById(R.id.receiverPhoto);
         }
     }
 
@@ -124,12 +154,14 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
         public TextView senderText;
         public TextView senderTime;
+        public ImageView photo;
 
         public senderViewHolder(@NonNull View itemView) {
             super(itemView);
 
             senderText = itemView.findViewById(R.id.senderText);
             senderTime = itemView.findViewById(R.id.senderTime);
+            photo      = itemView.findViewById(R.id.photo);
         }
     }
 }

@@ -11,7 +11,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.FreedomChat">
+        android:theme="@style/Theme.AppCompat">
         <activity android:name=".Friend_About"></activity>
         <activity android:name=".BigPhoto" />
         <activity android:name=".SettingActivity" />

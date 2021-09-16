@@ -43,6 +43,8 @@ public class Friend_About extends AppCompatActivity {
             public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                 Users users = snapshot.getValue(Users.class);
                 Picasso.get().load(users.getProfilePic()).placeholder(R.drawable.ic_baseline_account_circle_24).into(binding.friendPic);
+                binding.userNameTxt.setText(users.getUserName());
+                binding.userAbout.setText(users.getAbout());
             }
 
             @Override
@@ -50,7 +52,5 @@ public class Friend_About extends AppCompatActivity {
 
             }
         });
-
-
     }
 }

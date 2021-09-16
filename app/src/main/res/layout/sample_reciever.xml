@@ -12,37 +12,53 @@
     android:maxHeight="400dp"
     android:minHeight="30dp">
 
-    <TextView
-        android:id="@+id/recieverTime"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="4dp"
-        android:layout_marginBottom="4dp"
-        android:text="6:24 PM"
-        android:textColor="#40000000"
-        android:textSize="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <TextView
-        android:id="@+id/recieverText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="sans-serif-black"
-        android:inputType="textLongMessage|textMultiLine"
-        android:maxWidth="270dp"
-        android:minWidth="50dp"
-        android:padding="5dp"
-        android:text="hello"
-        app:layout_constraintBottom_toTopOf="@+id/recieverTime"
-        app:layout_constraintStart_toStartOf="@+id/guideline2"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:background="@drawable/bg_reciever"
         android:orientation="vertical"
-        app:layout_constraintGuide_begin="16dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/receiverPhoto"
+            android:layout_width="200dp"
+            android:layout_height="130dp"
+            android:layout_margin="5dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            tools:srcCompat="@tools:sample/avatars" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="16dp" />
+
+        <TextView
+            android:id="@+id/recieverText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-black"
+            android:inputType="textLongMessage|textMultiLine"
+            android:maxWidth="270dp"
+            android:minWidth="50dp"
+            android:padding="5dp"
+            android:text="hello"
+            android:textColor="#5C5C5C" />
+
+        <TextView
+            android:id="@+id/recieverTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="4dp"
+            android:layout_marginBottom="4dp"
+            android:text="6:24 PM"
+            android:textColor="#7C000000"
+            android:textSize="10dp" />
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

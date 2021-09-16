@@ -1,6 +1,8 @@
 package com.example.freedomchat.Models;
 
 public class MessageModel {
+
+    String imageUrl;
     String uId;
     String message;
     String messageID;
@@ -18,6 +20,14 @@ public class MessageModel {
     }
 
     public MessageModel(){}
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     public String getMessageID() {
         return messageID;

@@ -111,16 +111,44 @@
         android:orientation="horizontal"
         android:padding="10dp">
 
-        <EditText
-            android:id="@+id/etSendMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <LinearLayout
+            android:id="@+id/editTextLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@drawable/bg_et_message"
-            android:ems="10"
-            android:hint="Type a message"
-            android:inputType="textPersonName"
-            android:padding="10dp" />
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/etSendMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:hint="Type a message"
+                android:inputType="textPersonName"
+                android:padding="10dp"
+                android:textColor="#272727"
+                android:textColorHint="#676767" />
+
+            <ImageView
+                android:id="@+id/attachment"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/ic_baseline_attach_file_24"
+                app:tint="#656565" />
+
+            <ImageView
+                android:id="@+id/sendImage"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/ic_baseline_camera_alt_24"
+                app:tint="#656565" />
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/send"
