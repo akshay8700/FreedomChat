@@ -61,7 +61,7 @@ public class GroupChatActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String message = binding.etSendMessage.getText().toString();
                 final MessageModel model = new MessageModel(auth.getUid(), message);
-                model.setTimestamp(new Date().getTime());
+                model.setTimestamp(new Date().toString());
                 binding.etSendMessage.setText("");
 
                 database.getReference().child("Group Chat")

@@ -37,6 +37,8 @@ import com.squareup.picasso.Picasso;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -149,6 +151,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                     }
 
                     @Override
+
                     public void onCancelled(@NonNull DatabaseError error) {
 
                     }
@@ -158,11 +161,21 @@ public class ChatDetailActivity extends AppCompatActivity {
         binding.send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Send time in the form of String
+                String timeInString = "demoTime: 6:24PM";
+
+                // Getting time from DateFormat
+                DateFormat formatter = new SimpleDateFormat("hh:mm aa");
+                String dateFormatted = formatter.format(new Date().getTime());
+                timeInString = dateFormatted;
+                // setting sender Message, Time, senderID into MessageModel
                 String message = binding.etSendMessage.getText().toString();
                 final MessageModel model = new MessageModel(senderID, message);
-                model.setTimestamp(new Date().getTime());
-                binding.etSendMessage.setText("");
+                model.setTimestamp(timeInString);
 
+                binding.etSendMessage.setText("");
+                // Sending MessageModel to firebase database on specific messages of all messages
+                // In simple words Message id and Time details and Message text into firebase for every message by sender
                 database.getReference().child("chats")
                         .child(senderRoom)
                         .push()
@@ -237,28 +250,37 @@ public class ChatDetailActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+        // checking request code for correct photo sender Intent that i created for getting pic from gallery
         if(requestCode == 38) {
+            // Result should not null
             if(data != null) {
+                // getting data from data if its not null its mean we are ready to upload it into firebase with timestamp and message unique push id
                 if(data.getData() != null) {
+                    // setting photo in variable from using it
                     Uri selectedPhotoURI = data.getData();
-
+                    // getting time in mili with the help of calender class, For everytime unique name of photo when ever send
                     Calendar calendar = Calendar.getInstance();
+                    // making storagereference its like a making emty folers in firebase before storing anything
                     StorageReference storageReference = storage.getReference()
                             .child("chats").child("AZ_" + calendar.getTimeInMillis());
-
+                    // putting photo in firebase
                     storageReference.putFile(selectedPhotoURI).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onComplete(@NonNull @NotNull Task<UploadTask.TaskSnapshot> task) {
+                            // now getting downloadable url of our photo
                             if(task.isSuccessful()) {
                                 storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                     @Override
                                     public void onSuccess(Uri uri) {
+                                        // our downloadable image path is now in variable
                                         String imagePath = uri.toString();
-
+                                        // setting message information but for photo
                                         String message = binding.etSendMessage.getText().toString();
                                         final MessageModel model = new MessageModel(senderID, message);
-                                        model.setTimestamp(new Date().getTime());
+                                        // Timestamp setup
+                                        DateFormat dateFormat = new SimpleDateFormat("hh:mm aa");
+                                        String timeInAmPm = dateFormat.format(new Date().getTime());
+                                        model.setTimestamp(timeInAmPm);
                                         model.setImageUrl(imagePath);
                                         model.setMessage("Photo");
                                         binding.etSendMessage.setText("");
@@ -289,8 +311,6 @@ public class ChatDetailActivity extends AppCompatActivity {
                                         Activity mActivity = ChatDetailActivity.this;
 
                                         sendNotification(notTitle, message, token, context, mActivity);
-
-                                        Toast.makeText(ChatDetailActivity.this, imagePath, Toast.LENGTH_LONG).show();
                                     }
                                 });
 

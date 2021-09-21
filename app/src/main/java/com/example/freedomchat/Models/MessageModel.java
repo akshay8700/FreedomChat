@@ -6,9 +6,9 @@ public class MessageModel {
     String uId;
     String message;
     String messageID;
-    long timestamp;
+    String timestamp;
 
-    public MessageModel(String uId, String message, long timestamp) {
+    public MessageModel(String uId, String message, String timestamp) {
         this.uId = uId;
         this.message = message;
         this.timestamp = timestamp;
@@ -53,11 +53,11 @@ public class MessageModel {
         this.message = message;
     }
 
-    public long getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(long timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 }

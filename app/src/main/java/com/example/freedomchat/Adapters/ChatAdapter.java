@@ -3,6 +3,7 @@ package com.example.freedomchat.Adapters;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.opengl.Visibility;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.freedomchat.BigPhoto;
 import com.example.freedomchat.Models.MessageModel;
 import com.example.freedomchat.R;
 import com.google.firebase.auth.FirebaseAuth;
@@ -101,30 +103,46 @@ public class ChatAdapter extends RecyclerView.Adapter {
 
         if(holder.getClass() == senderViewHolder.class) {
             ((senderViewHolder)holder).senderText.setText(messageModel.getMessage());
-            ((senderViewHolder) holder).senderTime.setText("demo");
-
-            DateFormat formatter = new SimpleDateFormat("hh:mm aa");
-            formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-            String dateFormatted = formatter.format(messageModel.getTimestamp());
-
-            Log.i("Akku", "Time: " + dateFormatted);
+            ((senderViewHolder) holder).senderTime.setText(messageModel.getTimestamp());
+            // On photo click show full size
+            ((senderViewHolder) holder).photo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // making intent for sending photo url from here to bigphoto class so that when we open bigphoto
+                    // layout our bigphoto class wants photo data
+                    Intent showFullSizeIntent = new Intent(context, BigPhoto.class);
+                    showFullSizeIntent.putExtra("InChatPhotoURI", messageModel.getImageUrl());
+                    context.startActivity(showFullSizeIntent);
+                }
+            });
 
             // if its a photo from sender, Show photo to
             // friend and Me in simple words with this code i m sending photos
             if(messageModel.getMessage().equals("Photo")) {
                 ((senderViewHolder) holder).photo.setVisibility(View.VISIBLE);
                 ((senderViewHolder) holder).senderText.setVisibility(View.INVISIBLE);
-                Picasso.get().load(messageModel.getImageUrl()).placeholder(R.drawable.ic_twotone_access_time_24).into(((senderViewHolder) holder).photo);
+                Picasso.get().load(messageModel.getImageUrl()).placeholder(R.drawable.image).into(((senderViewHolder) holder).photo);
             }
         }
         else{
             ((recieverViewHolder)holder).recieverText.setText(messageModel.getMessage());
-            ((recieverViewHolder) holder).recieverTime.setText("Donut");
+            ((recieverViewHolder) holder).recieverTime.setText(messageModel.getTimestamp());
+            // On photo click show full size for receiver side
+            ((recieverViewHolder) holder).receiverPhoto.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // making intent for sending photo url from here to bigphoto class so that when we open bigphoto
+                    // layout our bigphoto class wants photo data
+                    Intent showFullSizeIntent = new Intent(context, BigPhoto.class);
+                    showFullSizeIntent.putExtra("InChatPhotoURI", messageModel.getImageUrl());
+                    context.startActivity(showFullSizeIntent);
+                }
+            });
 
             if(messageModel.getMessage().equals("Photo")) {
                 ((recieverViewHolder) holder).receiverPhoto.setVisibility(View.VISIBLE);
                 ((recieverViewHolder) holder).recieverText.setVisibility(View.INVISIBLE);
-                Picasso.get().load(messageModel.getImageUrl()).placeholder(R.drawable.ic_twotone_access_time_24).into(((recieverViewHolder) holder).receiverPhoto);
+                Picasso.get().load(messageModel.getImageUrl()).placeholder(R.drawable.image).into(((recieverViewHolder) holder).receiverPhoto);
             }
         }
     }
