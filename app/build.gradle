@@ -36,8 +36,7 @@ android {
 
 dependencies {
 
-    // appcompat-v7 is required
-    implementation 'com.zolad:zoominimageview:1.0.0'
+    implementation 'com.github.chrisbanes:PhotoView:2.3.0'
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'com.google.android.gms:play-services-auth:19.0.0'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
