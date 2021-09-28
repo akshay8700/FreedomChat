@@ -370,7 +370,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                     // Sending image into activity_send_photo.xml
 
                     // Sending captured image into send photo activity
-                    // With helping of bitmap converting into file ang than get that file in another class
+                    // With helping of bitmap converting into file and than get that file in another class
                     try {
                         //Write file
                         String filename = "capturedImage.png";
