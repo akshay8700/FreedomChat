@@ -4,6 +4,7 @@
     package="com.example.freedomchat">
 
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -12,7 +13,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat">
-        <activity android:name=".Friend_About"></activity>
+        <activity android:name=".sendPhotoActivity"></activity>
+        <activity android:name=".Friend_About" />
         <activity android:name=".BigPhoto" />
         <activity android:name=".SettingActivity" />
         <activity android:name=".GroupChatActivity" />

@@ -2,15 +2,23 @@ package com.example.freedomchat;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -37,6 +45,7 @@ import com.squareup.picasso.Picasso;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.FileOutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -59,6 +68,9 @@ public class ChatDetailActivity extends AppCompatActivity {
     String senderRoom;
     String recieverRoom;
 
+    private static final int MY_CAMERA_REQUEST_CODE = 100;
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +88,11 @@ public class ChatDetailActivity extends AppCompatActivity {
         String receiverID     = getIntent().getStringExtra("userID");
         String userName       = getIntent().getStringExtra("userName");
         String userPic        = getIntent().getStringExtra("UserPic");
+
+        // Checking permission if not granted request from user
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, MY_CAMERA_REQUEST_CODE);
+        }
 
         // getting receiver token for notification
         database.getReference().child("Users").child(receiverID).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -219,6 +236,15 @@ public class ChatDetailActivity extends AppCompatActivity {
                 startActivityForResult(intent, 38);
             }
         });
+
+        // Click photo/sendImage/Camera Icon
+        binding.sendImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, 369);
+            }
+        });
     }
 
     // When sender click on send button receiver will receive notification with this method
@@ -318,6 +344,67 @@ public class ChatDetailActivity extends AppCompatActivity {
                         }
                     });
                 }
+            }
+        }
+
+            // If we get requestCode of camera means photo is clicked by camera our intent is working fine and getted image from camera
+            if(requestCode == 369) {
+                // Result should not null
+                if (data != null) {
+                    // setting photo in variable from Intent result
+                    Bitmap capturedImgBitmap = (Bitmap)data.getExtras().get("data");
+                    //Uri myIMG = (Uri)data.getExtras().get("data");
+
+//                    Calendar calendar = Calendar.getInstance();
+//                    // making storagereference its like a making emty folders in firebase before storing anything
+//                    StorageReference storageReference = storage.getReference()
+//                            .child("chats").child("Captured" + calendar.getTimeInMillis());
+//
+//                    storageReference.putFile().addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+//                        @Override
+//                        public void onComplete(@NonNull @NotNull Task<UploadTask.TaskSnapshot> task) {
+//                             Toast.makeText(ChatDetailActivity.this, "Photo uploaded success!", Toast.LENGTH_SHORT).show();
+//                        }
+//                    });
+//
+                    // Sending image into activity_send_photo.xml
+
+                    // Sending captured image into send photo activity
+                    // With helping of bitmap converting into file ang than get that file in another class
+                    try {
+                        //Write file
+                        String filename = "capturedImage.png";
+                        FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
+                        capturedImgBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+                        //Cleanup
+                        stream.close();
+                        capturedImgBitmap.recycle();
+
+                        //Pop intent
+                        Intent intent = new Intent(ChatDetailActivity.this, sendPhotoActivity.class);
+                        intent.putExtra("capturedImage", filename);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+    // Its just a result of dangerous permissions depend on user if user accepted or not we will add conditions on allow and denied
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        // 100 is a unique number for our camera request so we can differentiate different permissions
+        // When asking for permission we give a unique code for that permission just like Intent
+        if (requestCode == 100) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "camera permission granted", Toast.LENGTH_LONG).show();
+                 binding.sendImage.setVisibility(View.VISIBLE);
+            } else {
+                Toast.makeText(this, "camera permission denied", Toast.LENGTH_LONG).show();
+                 binding.sendImage.setVisibility(View.INVISIBLE);
             }
         }
     }
