@@ -6,22 +6,24 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.freedomchat.Adapters.ChatAdapter;
@@ -36,8 +38,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -45,14 +45,14 @@ import com.squareup.picasso.Picasso;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Objects;
 
 public class ChatDetailActivity extends AppCompatActivity {
 
@@ -61,14 +61,18 @@ public class ChatDetailActivity extends AppCompatActivity {
     FirebaseAuth auth;
     FirebaseStorage storage;
 
-    String recieverToken;
+    String receiverToken;
     String myName;
     String senderID;
+    String currentPhotoPath;
 
     String senderRoom;
-    String recieverRoom;
+    String receiverRoom;
 
     private static final int MY_CAMERA_REQUEST_CODE = 100;
+    private static final int MY_WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 1;
+
+    private static final int MY_CAMERA_INTENT_REQUEST_CODE = 123;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -89,19 +93,45 @@ public class ChatDetailActivity extends AppCompatActivity {
         String userName       = getIntent().getStringExtra("userName");
         String userPic        = getIntent().getStringExtra("UserPic");
 
-        // Checking permission if not granted request from user
-        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, MY_CAMERA_REQUEST_CODE);
-        }
+        // Checking storage permission if not granted request from user
+        requestStoragePermission();
 
-        // getting receiver token for notification
+        //Now setting that data in profile and name section and others
+        binding.userName.setText(userName);
+        Picasso.get().load(userPic).placeholder(R.drawable.ic_baseline_account_circle_24).into(binding.userPic);
+
+        //Setting up for RV Defining list and adapter
+        final ArrayList<MessageModel> messageModels = new ArrayList<>();
+        final ChatAdapter chatAdapter = new ChatAdapter(messageModels, this, receiverID);
+        binding.rvChat.setAdapter(chatAdapter);
+
+        //Setting up for RV setting layout in RV
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setStackFromEnd(true); // Show from down when open messages
+        binding.rvChat.setLayoutManager(layoutManager);
+
+        //Variable for giving unique id in Firebase for sender and reciever messages group
+        senderRoom = senderID + receiverID;
+        receiverRoom = receiverID + senderID;
+
+        getReceiverTokenForNotification(receiverID);
+        getUserName();
+        pressBack();
+        showMessageOnDisplay(messageModels, chatAdapter);
+        onSendClick();
+        onUserNameClick(receiverID);
+        onAttachmentClick();
+        onClickCamera();
+    }
+
+    private void getReceiverTokenForNotification(String receiverID) {
         database.getReference().child("Users").child(receiverID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                 Users users = snapshot.getValue(Users.class);
-                recieverToken = users.getUserToken();
+                receiverToken = users.getUserToken();
 
-                Log.i("userToken", "receiverToken: " + recieverToken);
+                Log.i("userToken", "receiverToken: " + receiverToken);
             }
 
             @Override
@@ -109,7 +139,9 @@ public class ChatDetailActivity extends AppCompatActivity {
 
             }
         });
+    }
 
+    private void getUserName() {
         // getting users name not friend name
         database.getReference().child("Users").child(auth.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -123,11 +155,9 @@ public class ChatDetailActivity extends AppCompatActivity {
 
             }
         });
+    }
 
-        //Now setting that data in profile and name section and others
-        binding.userName.setText(userName);
-        Picasso.get().load(userPic).placeholder(R.drawable.ic_baseline_account_circle_24).into(binding.userPic);
-
+    private void pressBack() {
         //When press back go to the chat list
         binding.btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,21 +166,9 @@ public class ChatDetailActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
 
-        //Setting up for RV Defining list and adapter
-        final ArrayList<MessageModel> messageModels = new ArrayList<>();
-        final ChatAdapter chatAdapter = new ChatAdapter(messageModels, this, receiverID);
-        binding.rvChat.setAdapter(chatAdapter);
-
-        //Setting up for RV setting layout in RV
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setStackFromEnd(true); // Show from dowm when open messages
-        binding.rvChat.setLayoutManager(layoutManager);
-
-        //Variable for giving unique id in Firebase for sender and reciever messages group
-         senderRoom = senderID + receiverID;
-         recieverRoom = receiverID + senderID;
-
+    private void showMessageOnDisplay(ArrayList<MessageModel> messageModels, ChatAdapter chatAdapter) {
         //After user sended a message this code will show that message in chatting display means in recyclerView with chat bubble
         //Basically we are getting chat data from firebase to chatdetailactivity
         database.getReference().child("chats")
@@ -173,8 +191,9 @@ public class ChatDetailActivity extends AppCompatActivity {
 
                     }
                 });
-
-        // When user click on send we will send that message into firebase database
+    }
+    // When user click on send we will send that message into firebase database
+    public void onSendClick() {
         binding.send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -200,7 +219,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(Void aVoid) {
                         database.getReference().child("chats")
-                                .child(recieverRoom)
+                                .child(receiverRoom)
                                 .push()
                                 .setValue(model).addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
@@ -214,19 +233,16 @@ public class ChatDetailActivity extends AppCompatActivity {
                 // Send notification
                 // Getting and setting all notification related data like title message token
                 String notTitle = myName;
-                String token = recieverToken;
+                String token = receiverToken;
                 Context context = getApplicationContext();
                 Activity mActivity = ChatDetailActivity.this;
 
                 sendNotification(notTitle, message, token, context, mActivity);
             }
         });
-
-        Log.i("NotiDetails", "UserName: " + userName);
-
-        onUserNameClick(receiverID);
-
-        // Attachment Button
+    }
+    // Attachment Button
+    public void onAttachmentClick() {
         binding.attachment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -236,17 +252,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                 startActivityForResult(intent, 38);
             }
         });
-
-        // Click photo/sendImage/Camera Icon
-        binding.sendImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent, 369);
-            }
-        });
     }
-
     // When sender click on send button receiver will receive notification with this method
     public static void sendNotification(String title, String message, String token, Context context, Activity mActivity) {
         if (title != null && !title.isEmpty() && !message.isEmpty() && !token.isEmpty()) {
@@ -258,7 +264,6 @@ public class ChatDetailActivity extends AppCompatActivity {
             Toast.makeText(context, "Please fill title content and token", Toast.LENGTH_SHORT).show();
         }
     }
-
     // Show user about
     public void onUserNameClick(String receiverID) {
         binding.userName.setOnClickListener(new View.OnClickListener() {
@@ -270,12 +275,12 @@ public class ChatDetailActivity extends AppCompatActivity {
             }
         });
     }
-
-    // Getting selected photo
-    // Ex: sending photo to friend from gallery
+    // Intent results of Actions
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        // Getting selected photo
+        // Ex: sending photo to friend from gallery
         // checking request code for correct photo sender Intent that i created for getting pic from gallery
         if(requestCode == 38) {
             // Result should not null
@@ -318,7 +323,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                                             @Override
                                             public void onSuccess(Void aVoid) {
                                                 database.getReference().child("chats")
-                                                        .child(recieverRoom)
+                                                        .child(receiverRoom)
                                                         .push()
                                                         .setValue(model).addOnSuccessListener(new OnSuccessListener<Void>() {
                                                     @Override
@@ -332,7 +337,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                                         // Send notification
                                         // Getting and setting all notification related data like title message token
                                         String notTitle = myName;
-                                        String token = recieverToken;
+                                        String token = receiverToken;
                                         Context context = getApplicationContext();
                                         Activity mActivity = ChatDetailActivity.this;
 
@@ -348,64 +353,159 @@ public class ChatDetailActivity extends AppCompatActivity {
         }
 
             // If we get requestCode of camera means photo is clicked by camera our intent is working fine and getted image from camera
-            if(requestCode == 369) {
+            if(requestCode == MY_CAMERA_INTENT_REQUEST_CODE) {
                 // Result should not null
                 if (data != null) {
-                    // setting photo in variable from Intent result
-                    Bitmap capturedImgBitmap = (Bitmap)data.getExtras().get("data");
-                    //Uri myIMG = (Uri)data.getExtras().get("data");
+                    Calendar calendar = Calendar.getInstance();
+                    // making storagereference its like a making emty folders in firebase before storing anything
+                    StorageReference storageReference = storage.getReference()
+                            .child("Captured").child("Captured" + calendar.getTimeInMillis());
 
-//                    Calendar calendar = Calendar.getInstance();
-//                    // making storagereference its like a making emty folders in firebase before storing anything
-//                    StorageReference storageReference = storage.getReference()
-//                            .child("chats").child("Captured" + calendar.getTimeInMillis());
-//
-//                    storageReference.putFile().addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-//                        @Override
-//                        public void onComplete(@NonNull @NotNull Task<UploadTask.TaskSnapshot> task) {
-//                             Toast.makeText(ChatDetailActivity.this, "Photo uploaded success!", Toast.LENGTH_SHORT).show();
-//                        }
-//                    });
-//
-                    // Sending image into activity_send_photo.xml
-
-                    // Sending captured image into send photo activity
-                    // With helping of bitmap converting into file and than get that file in another class
-                    try {
-                        //Write file
-                        String filename = "capturedImage.png";
-                        FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
-                        capturedImgBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-
-                        //Cleanup
-                        stream.close();
-                        capturedImgBitmap.recycle();
-
-                        //Pop intent
-                        Intent intent = new Intent(ChatDetailActivity.this, sendPhotoActivity.class);
-                        intent.putExtra("capturedImage", filename);
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    storageReference.putFile(Uri.parse(currentPhotoPath)).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull @NotNull Task<UploadTask.TaskSnapshot> task) {
+                            Toast.makeText(ChatDetailActivity.this, "Uploaded Sucessfully!", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
             }
         }
-
     // Its just a result of dangerous permissions depend on user if user accepted or not we will add conditions on allow and denied
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        // 100 is a unique number for our camera request so we can differentiate different permissions
+        // MY_WRITE_EXTERNAL_STORAGE_REQUEST_CODE is a var with unique number for our camera request so we can differentiate different permissions
         // When asking for permission we give a unique code for that permission just like Intent
-        if (requestCode == 100) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        if (requestCode == MY_CAMERA_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // capturing picture
+                dispatchTakePictureIntent();
                 Toast.makeText(this, "camera permission granted", Toast.LENGTH_LONG).show();
-                 binding.sendImage.setVisibility(View.VISIBLE);
             } else {
                 Toast.makeText(this, "camera permission denied", Toast.LENGTH_LONG).show();
-                 binding.sendImage.setVisibility(View.INVISIBLE);
             }
+        }
+
+        if (requestCode == MY_WRITE_EXTERNAL_STORAGE_REQUEST_CODE)  {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Storage Permission GRANTED", Toast.LENGTH_SHORT).show();
+                binding.sendImage.setVisibility(View.VISIBLE);
+            } else {
+                Toast.makeText(this, "Storage Permission DENIED", Toast.LENGTH_SHORT).show();
+                binding.sendImage.setVisibility(View.INVISIBLE);
+            }
+        }
+    }
+    // Method to convert bitmap to uri, Pass context and bitmap and get uri of bitmap
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "com.example.freedomchat.fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, MY_CAMERA_INTENT_REQUEST_CODE);
+            }
+        }
+    }
+
+    private void onClickCamera() {
+        // Click photo/sendImage/Camera Icon
+        binding.sendImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestCameraPermission();
+            }
+        });
+    }
+
+    private void requestStoragePermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)) {
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("This permission is needed for saving any time of files in storage")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(ChatDetailActivity.this,
+                                    new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, MY_WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .create().show();
+
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, MY_WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
+        }
+    }
+
+    private void requestCameraPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.CAMERA)) {
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("This permission is needed for capture image")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(ChatDetailActivity.this,
+                                    new String[] {Manifest.permission.CAMERA}, MY_CAMERA_REQUEST_CODE);
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .create().show();
+
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.CAMERA}, MY_CAMERA_REQUEST_CODE);
         }
     }
 }

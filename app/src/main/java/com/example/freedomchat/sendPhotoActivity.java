@@ -19,6 +19,7 @@ import com.google.firebase.storage.UploadTask;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.util.Calendar;
 
@@ -62,12 +63,18 @@ public class sendPhotoActivity extends AppCompatActivity {
         binding.sendPhotoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Converting bitmap to Byte
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                capturedImageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byte[] byteArray = stream.toByteArray();
+                capturedImageBitmap.recycle();
+
                 Calendar calendar = Calendar.getInstance();
-                // making storagereference its like a making emty folers in firebase before storing anything
+                // making storagereference its like a making emty folders in firebase before storing anything
                 StorageReference storageReference = storage.getReference()
                         .child("Captured").child("Captured" + calendar.getTimeInMillis());
 
-                storageReference.putStream(inputStream).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                storageReference.putBytes(byteArray).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onComplete(@NonNull @NotNull Task<UploadTask.TaskSnapshot> task) {
                         Toast.makeText(sendPhotoActivity.this, "Uploaded Sucessfully!", Toast.LENGTH_SHORT).show();
